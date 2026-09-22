@@ -50,21 +50,19 @@ class VisionSentry:
             from google.genai import types
 
             client = genai.Client(api_key=self.api_key)
-            prompt = f"""
-            You are the Sovereign Vision Sentry for a browser automation agent.
-            Current Goal: {goal}
-            
-            Inspect the screenshot carefully. Look for:
-            1. Canvas elements, sliders, puzzle pieces, or interactive graphic controls.
-            2. CAPTCHA verification buttons (e.g., 'Verify you are human', Turnstile, hCaptcha checkbox).
-            
-            Return JSON with the exact target coordinates on a 0-1000 scale:
-            {{
-              "action": "CLICK",
-              "point": [y_coord_0_to_1000, x_coord_0_to_1000],
-              "explanation": "why clicking this location achieves the sub-goal"
-            }}
-            """
+            prompt = (
+                f"You are the Sovereign Vision Sentry for a browser automation agent.\n"
+                f"Current Goal: {goal}\n\n"
+                f"Inspect the screenshot carefully. Look for:\n"
+                f"1. Canvas elements, sliders, puzzle pieces, or interactive graphic controls.\n"
+                f"2. CAPTCHA verification buttons (e.g., 'Verify you are human', Turnstile, hCaptcha checkbox).\n\n"
+                f"Return JSON with the exact target coordinates on a 0-1000 scale:\n"
+                f"{{\n"
+                f'  "action": "CLICK",\n'
+                f'  "point": [y_coord_0_to_1000, x_coord_0_to_1000],\n'
+                f'  "explanation": "why clicking this location achieves the sub-goal"\n'
+                f"}}"
+            )
 
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
