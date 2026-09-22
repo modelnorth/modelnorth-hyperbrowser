@@ -29,7 +29,7 @@ Traditional browser agents suffer from two compounding failure modes:
                                  │ Ambiguous / Complex
                                  ▼
  ┌───────────────────────────────────────────────────────────────┐
- │ TIER 1: Local System 1 Classifier (Laya ONNX / 8-bit)         │
+ │ TIER 1: Local System 1 Classifier (HyperLocal ONNX / 8-bit)   │
  │ • Latency: 7–15 ms  |  Cost: $0.00 (Offline CPU/GPU)          │
  │ • Evaluates indexed DOM table with speculative decision heads │
  └───────────────────────────────┬───────────────────────────────┘
@@ -59,7 +59,7 @@ Traditional browser agents suffer from two compounding failure modes:
   [3] combobox  Destination    · empty
   [4] textbox   Departure date · empty
   ```
-- Evaluates the state using **Laya ONNX** (INT8 quantized) in a single forward pass.
+- Evaluates the state using **HyperLocal ONNX** (INT8 quantized) in a single forward pass.
 - Returns the winning operation (`CLICK`, `TYPE_TEXT`, `SELECT`, `SCROLL`, `DONE`) and target index speculatively.
 - If the operation is `TYPE_TEXT`, queries a local text helper (e.g. `Qwen2.5-Coder-1.5B` via Ollama/llama.cpp) in ~40ms.
 - **Latency**: `7–15 ms`.
@@ -86,7 +86,7 @@ To guarantee zero coordinate drift and prevent stale element references:
 
 ## 4. Latency & Resource Budget
 
-| Operation Stage | TypeSafe Jev (Cloud) | ModelNorth HyperBrowser (Hybrid) | Speedup Factor |
+| Operation Stage | Legacy Cloud Agent | ModelNorth HyperBrowser (Hybrid) | Speedup Factor |
 | :--- | :--- | :--- | :--- |
 | **DOM Snapshot Extraction** | 30–50 ms | 15–25 ms | ~2x |
 | **Standard Decision Cycle** | 200–500 ms (API roundtrip) | **1–15 ms (Local)** | **15x – 30x** |

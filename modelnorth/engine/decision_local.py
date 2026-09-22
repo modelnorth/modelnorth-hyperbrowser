@@ -21,7 +21,7 @@ class ActionDecision:
 
 
 class LocalDecisionEngine:
-    """High-speed local decision model runner (Laya ONNX / Local Fast Head)."""
+    """High-speed local decision model runner (HyperLocal ONNX / Local Fast Head)."""
 
     def __init__(self, model_path: Optional[str] = None) -> None:
         self.model_path = model_path

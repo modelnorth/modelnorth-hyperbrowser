@@ -53,7 +53,7 @@ modelnorth-hyperbrowser/
 │   │   ├── fastpath.js        # Sub-1ms deterministic regex/intent matcher
 │   │   └── browser.py         # CDP harness, viewport geometry & pixel-click executor
 │   ├── engine/
-│   │   ├── decision_local.py  # Local Laya ONNX runtime (7-15ms System 1 classifier)
+│   │   ├── decision_local.py  # Local HyperLocal ONNX runtime (7-15ms System 1 classifier)
 │   │   ├── text_engine.py     # Local Ollama (qwen2.5-coder) or API text helper
 │   │   └── vision_sentry.py   # Gemini 2.5 Flash / multimodal coordinate resolver
 │   └── ui/

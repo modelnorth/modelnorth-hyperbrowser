@@ -84,7 +84,7 @@ HTML_DASHBOARD = """
                         <span class="text-sm text-gray-200">TYPE_TEXT [data-mn-id="3"] "Where from?" -> "Zurich"</span>
                     </div>
                     <div class="flex items-center gap-4 text-xs">
-                        <span class="text-gray-400">Laya ONNX INT8</span>
+                        <span class="text-gray-400">HyperLocal ONNX INT8</span>
                         <span class="text-emerald-400 font-semibold">7.4 ms</span>
                     </div>
                 </div>
@@ -95,7 +95,7 @@ HTML_DASHBOARD = """
                         <span class="text-sm text-gray-200">TYPE_TEXT [data-mn-id="4"] "Where to?" -> "London"</span>
                     </div>
                     <div class="flex items-center gap-4 text-xs">
-                        <span class="text-gray-400">Laya ONNX INT8</span>
+                        <span class="text-gray-400">HyperLocal ONNX INT8</span>
                         <span class="text-emerald-400 font-semibold">8.1 ms</span>
                     </div>
                 </div>
