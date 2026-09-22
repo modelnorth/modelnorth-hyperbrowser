@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Ruff Lint Check
         run: |
-          uv run ruff check modelnorth/ tests/ scripts/ examples/
+          uv run ruff check .
 
       - name: Run Automated Unit Tests
         run: |
