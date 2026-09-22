@@ -43,3 +43,6 @@ target-version = "py310"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.hatch.build.targets.wheel]
+packages = ["modelnorth"]
