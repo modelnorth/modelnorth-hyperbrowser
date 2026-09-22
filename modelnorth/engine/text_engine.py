@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import re
-import time
-from typing import Optional
 
 import httpx
 
@@ -25,9 +23,7 @@ class TextGenerationEngine:
 
     async def generate_text(self, field_name: str, goal: str) -> str:
         """Generates target input string using fast regex heuristics or local LLM."""
-        start_t = time.perf_counter()
         field_lower = field_name.lower()
-        goal_lower = goal.lower()
 
         # 1. Fast-Path Heuristic Extraction (< 1 ms)
         if "from" in field_lower or "origin" in field_lower or "where from" in field_lower:

@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import AsyncGenerator, List, Optional
 
 from modelnorth.core.browser import BrowserSession
-from modelnorth.engine.decision_local import ActionDecision, LocalDecisionEngine
+from modelnorth.engine.decision_local import LocalDecisionEngine
 from modelnorth.engine.text_engine import TextGenerationEngine
-from modelnorth.engine.vision_sentry import VisionAction, VisionSentry
+from modelnorth.engine.vision_sentry import VisionSentry
 
 
 @dataclass

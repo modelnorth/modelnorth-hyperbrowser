@@ -77,7 +77,6 @@ class LocalDecisionEngine:
         scored_candidates = []
 
         for el in elements:
-            el_id = el["id"]
             name = (el.get("name") or "").lower()
             role = (el.get("role") or "").lower()
             val = (el.get("value") or "").lower()
