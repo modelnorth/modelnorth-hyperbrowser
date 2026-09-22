@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Ultrafast, local-first sovereign web agent engine combining sub-20ms decision models and multimodal vision sentries."
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "ModelNorth Sovereign AI", email = "engineering@modelnorth.ai" }
 ]
