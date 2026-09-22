@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import time
 from typing import Optional
+
 import httpx
 
 
@@ -60,7 +61,7 @@ class TextGenerationEngine:
             if response.status_code == 200:
                 data = response.json()
                 content = data["choices"][0]["message"]["content"].strip()
-                return content.strip('"\'')
+                return content.strip("\"'")
         except Exception:
             pass
 

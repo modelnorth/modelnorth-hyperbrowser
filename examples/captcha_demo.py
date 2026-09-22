@@ -15,6 +15,7 @@ if sys.platform == "win32":
         pass
 
 from rich.console import Console
+
 from modelnorth.agent import HyperAgent
 
 console = Console(highlight=False)
@@ -24,7 +25,7 @@ async def main():
     goal = "Verify human check on Cloudflare challenge by clicking the turnstile verification checkbox."
     url = "https://2captcha.com/demo/cloudflare-turnstile"
 
-    console.print(f"[bold magenta]👁️ Running ModelNorth Vision Sentry (Tier 2 Fallback)[/bold magenta]")
+    console.print("[bold magenta]👁️ Running ModelNorth Vision Sentry (Tier 2 Fallback)[/bold magenta]")
     console.print(f"[dim]Goal: {goal}[/dim]\n")
 
     async with HyperAgent(url=url, goal=goal, headless=False, max_steps=10) as agent:

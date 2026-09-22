@@ -32,8 +32,10 @@ async def run_cli(url: str, goal: str, headless: bool = False, max_steps: int = 
     async with HyperAgent(url=url, goal=goal, headless=headless, max_steps=max_steps) as agent:
         async for step in agent.run():
             tier_badge = (
-                "[bold cyan]Tier 0[/bold cyan]" if step.tier == 0
-                else "[bold green]Tier 1[/bold green]" if step.tier == 1
+                "[bold cyan]Tier 0[/bold cyan]"
+                if step.tier == 0
+                else "[bold green]Tier 1[/bold green]"
+                if step.tier == 1
                 else "[bold yellow]Tier 2[/bold yellow]"
             )
             target_display = f"{step.target_name or ''}"

@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class ActionDecision:
     """Represents a discrete speculative decision output from System 1."""
+
     operation: str  # CLICK, TYPE_TEXT, SELECT, SCROLL_DOWN, WAIT, DONE, BLOCKED
     target_id: Optional[int] = None
     target_name: Optional[str] = None
@@ -29,10 +30,8 @@ class LocalDecisionEngine:
         if model_path:
             try:
                 import onnxruntime as ort
-                self._session = ort.InferenceSession(
-                    model_path,
-                    providers=["CPUExecutionProvider"]
-                )
+
+                self._session = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
             except Exception:
                 self._session = None
 
@@ -57,8 +56,12 @@ class LocalDecisionEngine:
 
         # Check if flight results list is already visible on screen
         has_results = any(
-            ("flight" in (el.get("name") or "").lower() and "stop" in (el.get("name") or "").lower()) or
-            ("aed" in (el.get("name") or "").lower() or "usd" in (el.get("name") or "").lower() or "$" in (el.get("name") or ""))
+            ("flight" in (el.get("name") or "").lower() and "stop" in (el.get("name") or "").lower())
+            or (
+                "aed" in (el.get("name") or "").lower()
+                or "usd" in (el.get("name") or "").lower()
+                or "$" in (el.get("name") or "")
+            )
             for el in elements
         )
         search_clicked = any("search" in h.lower() for h in history)
@@ -68,7 +71,7 @@ class LocalDecisionEngine:
                 operation="DONE",
                 confidence=1.0,
                 elapsed_ms=(time.perf_counter() - start_t) * 1000,
-                target_name="Flight options list visible"
+                target_name="Flight options list visible",
             )
 
         scored_candidates = []

@@ -15,6 +15,7 @@ if sys.platform == "win32":
         pass
 
 from rich.console import Console
+
 from modelnorth.agent import HyperAgent
 
 console = Console(highlight=False)
@@ -27,7 +28,7 @@ async def main():
     )
     url = "https://www.google.com/travel/flights?hl=en"
 
-    console.print(f"[bold cyan]🚀 Running ModelNorth HyperBrowser Benchmark[/bold cyan]")
+    console.print("[bold cyan]🚀 Running ModelNorth HyperBrowser Benchmark[/bold cyan]")
     console.print(f"[dim]Goal: {goal}[/dim]\n")
 
     async with HyperAgent(url=url, goal=goal, headless=False, max_steps=15) as agent:

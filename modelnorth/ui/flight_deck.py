@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-import uvicorn
 
 app = FastAPI(title="ModelNorth Flight Deck")
 
@@ -117,6 +118,7 @@ HTML_DASHBOARD = """
 </body>
 </html>
 """
+
 
 @app.get("/", response_class=HTMLResponse)
 async def get_dashboard():

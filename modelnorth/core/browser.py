@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+
+from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 
 class BrowserSession:
@@ -48,11 +49,11 @@ class BrowserSession:
                     "--disable-blink-features=AutomationControlled",
                     "--no-sandbox",
                     "--disable-setuid-sandbox",
-                ]
+                ],
             )
             self._context = await self._browser.new_context(
                 viewport={"width": self.viewport_width, "height": self.viewport_height},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             )
             self._page = await self._context.new_page()
 

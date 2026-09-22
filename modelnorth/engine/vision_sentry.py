@@ -12,6 +12,7 @@ from typing import Optional, Tuple
 @dataclass
 class VisionAction:
     """Represents a coordinate-grounded visual action."""
+
     action: str  # CLICK, DRAG, SOLVE_CAPTCHA
     point_x_ratio: float  # 0.0 to 1.0
     point_y_ratio: float  # 0.0 to 1.0
@@ -70,9 +71,7 @@ class VisionSentry:
                     types.Part.from_bytes(data=screenshot_bytes, mime_type="image/png"),
                     prompt,
                 ],
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json"
-                ),
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
             )
 
             data = json.loads(response.text)

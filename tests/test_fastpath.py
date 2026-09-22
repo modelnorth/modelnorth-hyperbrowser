@@ -1,14 +1,15 @@
 """Unit tests for Tier 0 Fast-Path Compiler."""
 
 import pytest
-from modelnorth.engine.text_engine import TextGenerationEngine
+
 from modelnorth.engine.decision_local import LocalDecisionEngine
+from modelnorth.engine.text_engine import TextGenerationEngine
 
 
 @pytest.mark.asyncio
 async def test_text_engine_heuristics():
     engine = TextGenerationEngine()
-    
+
     # Test Origin extraction
     origin = await engine.generate_text("Where from?", "Find flights from Zurich to London on Sept 20")
     assert origin == "Zurich"
@@ -24,7 +25,7 @@ async def test_text_engine_heuristics():
 
 def test_decision_engine_local_ranking():
     engine = LocalDecisionEngine()
-    
+
     elements = [
         {"id": 1, "name": "Google", "role": "link"},
         {"id": 2, "name": "Where from? Origin airport", "role": "combobox", "value": "New York"},

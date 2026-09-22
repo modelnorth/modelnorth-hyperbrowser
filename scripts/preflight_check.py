@@ -19,10 +19,10 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from modelnorth.core.browser import BrowserSession
 from modelnorth.engine.decision_local import LocalDecisionEngine
 from modelnorth.engine.text_engine import TextGenerationEngine
 from modelnorth.engine.vision_sentry import VisionSentry
-from modelnorth.core.browser import BrowserSession
 
 console = Console(highlight=False)
 
@@ -38,7 +38,7 @@ async def test_tier0_fastpath(browser: BrowserSession) -> bool:
     </html>
     """
     await browser.page.set_content(test_html)
-    
+
     # 1. Test click matching
     res_click = await browser.run_fastpath('click "Search Flights"')
     if not res_click or not res_click.get("matched"):
@@ -76,7 +76,7 @@ async def test_tier2_vision_circuit_breaker() -> bool:
     """Test Tier 2 Vision Sentry coordinate output format."""
     sentry = VisionSentry(api_key=None)  # Synthetic fallback test
     fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
-    
+
     action = await sentry.analyze_and_ground(fake_png, "Click center of canvas", 1280, 800)
     assert action is not None
     assert 0.0 <= action.point_x_ratio <= 1.0
@@ -86,7 +86,7 @@ async def test_tier2_vision_circuit_breaker() -> bool:
 
 async def run_preflight():
     console.print(Panel.fit("[bold cyan]⚡ ModelNorth HyperBrowser · Preflight Verification Suite[/bold cyan]"))
-    
+
     table = Table(title="Preflight Test Matrix", show_header=True, header_style="bold magenta")
     table.add_column("Test Component", width=30)
     table.add_column("Target Tier", justify="center", width=12)
@@ -98,9 +98,16 @@ async def run_preflight():
         t0 = time.perf_counter()
         await test_tier1_decision_engine()
         ms = (time.perf_counter() - t0) * 1000
-        table.add_row("Local System 1 Classifier", "[bold green]Tier 1[/bold green]", "[bold green]PASSED[/bold green]", f"{ms:.2f} ms")
+        table.add_row(
+            "Local System 1 Classifier",
+            "[bold green]Tier 1[/bold green]",
+            "[bold green]PASSED[/bold green]",
+            f"{ms:.2f} ms",
+        )
     except Exception as e:
-        table.add_row("Local System 1 Classifier", "[bold green]Tier 1[/bold green]", "[bold red]FAILED[/bold red]", str(e))
+        table.add_row(
+            "Local System 1 Classifier", "[bold green]Tier 1[/bold green]", "[bold red]FAILED[/bold red]", str(e)
+        )
 
     # 2. Text Engine Check
     try:
@@ -109,7 +116,12 @@ async def run_preflight():
         extracted = await text_eng.generate_text("Where to?", "Flight from Paris to Tokyo")
         ms = (time.perf_counter() - t0) * 1000
         assert extracted == "Tokyo"
-        table.add_row("Text Heuristic Engine", "[bold green]Tier 1[/bold green]", "[bold green]PASSED[/bold green]", f"{ms:.2f} ms")
+        table.add_row(
+            "Text Heuristic Engine",
+            "[bold green]Tier 1[/bold green]",
+            "[bold green]PASSED[/bold green]",
+            f"{ms:.2f} ms",
+        )
     except Exception as e:
         table.add_row("Text Heuristic Engine", "[bold green]Tier 1[/bold green]", "[bold red]FAILED[/bold red]", str(e))
 
@@ -118,9 +130,16 @@ async def run_preflight():
         t0 = time.perf_counter()
         await test_tier2_vision_circuit_breaker()
         ms = (time.perf_counter() - t0) * 1000
-        table.add_row("Vision Sentry Circuit Breaker", "[bold yellow]Tier 2[/bold yellow]", "[bold green]PASSED[/bold green]", f"{ms:.2f} ms")
+        table.add_row(
+            "Vision Sentry Circuit Breaker",
+            "[bold yellow]Tier 2[/bold yellow]",
+            "[bold green]PASSED[/bold green]",
+            f"{ms:.2f} ms",
+        )
     except Exception as e:
-        table.add_row("Vision Sentry Circuit Breaker", "[bold yellow]Tier 2[/bold yellow]", "[bold red]FAILED[/bold red]", str(e))
+        table.add_row(
+            "Vision Sentry Circuit Breaker", "[bold yellow]Tier 2[/bold yellow]", "[bold red]FAILED[/bold red]", str(e)
+        )
 
     # 4. Live Browser & Tier 0 In-V8 FastPath Check
     browser = BrowserSession(headless=True)
@@ -129,9 +148,16 @@ async def run_preflight():
         t0 = time.perf_counter()
         await test_tier0_fastpath(browser)
         ms = (time.perf_counter() - t0) * 1000
-        table.add_row("In-Browser V8 FastPath", "[bold cyan]Tier 0[/bold cyan]", "[bold green]PASSED[/bold green]", f"{ms:.2f} ms")
+        table.add_row(
+            "In-Browser V8 FastPath", "[bold cyan]Tier 0[/bold cyan]", "[bold green]PASSED[/bold green]", f"{ms:.2f} ms"
+        )
     except Exception as e:
-        table.add_row("In-Browser V8 FastPath", "[bold cyan]Tier 0[/bold cyan]", "[bold red]FAILED[/bold red]", f"{type(e).__name__}: {str(e)[:40]}")
+        table.add_row(
+            "In-Browser V8 FastPath",
+            "[bold cyan]Tier 0[/bold cyan]",
+            "[bold red]FAILED[/bold red]",
+            f"{type(e).__name__}: {str(e)[:40]}",
+        )
     finally:
         await browser.close()
 

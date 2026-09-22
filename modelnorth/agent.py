@@ -8,14 +8,15 @@ from dataclasses import dataclass, field
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from modelnorth.core.browser import BrowserSession
-from modelnorth.engine.decision_local import LocalDecisionEngine, ActionDecision
+from modelnorth.engine.decision_local import ActionDecision, LocalDecisionEngine
 from modelnorth.engine.text_engine import TextGenerationEngine
-from modelnorth.engine.vision_sentry import VisionSentry, VisionAction
+from modelnorth.engine.vision_sentry import VisionAction, VisionSentry
 
 
 @dataclass
 class AgentStep:
     """Telemetry report for each executed micro-action."""
+
     step_number: int
     tier: int  # 0: In-Browser, 1: Local System 1, 2: Vision Sentry
     action: str
@@ -31,6 +32,7 @@ class AgentStep:
 @dataclass
 class AgentState:
     """Cumulative state of the active HyperAgent run."""
+
     url: str
     goal: str
     status: str = "running"  # running, completed, blocked, error
@@ -84,7 +86,7 @@ class HyperAgent:
 
             # 2. Check Tier 0 Fast-Path Compiler (< 1 ms)
             fastpath_res = await self.browser.run_fastpath(self.goal)
-            
+
             if fastpath_res and fastpath_res.get("matched"):
                 action = fastpath_res["action"]
                 target_id = fastpath_res["targetId"]
@@ -109,7 +111,7 @@ class HyperAgent:
                     elapsed_ms=step_elapsed,
                     total_elapsed_ms=total_elapsed,
                     confidence=fastpath_res.get("confidence", 1.0),
-                    notes="Direct In-Browser V8 Fast-Path Match"
+                    notes="Direct In-Browser V8 Fast-Path Match",
                 )
                 self.state.steps.append(step)
                 yield step
@@ -119,9 +121,7 @@ class HyperAgent:
             # 3. Check Tier 2 Vision Sentry Trigger (Canvas / CAPTCHA / Empty DOM)
             if visual_triggers.get("hasCanvas") or visual_triggers.get("hasCaptcha") or len(elements) == 0:
                 screenshot = await self.browser.capture_screenshot()
-                vision_action = await self.vision_sentry.analyze_and_ground(
-                    screenshot, self.goal
-                )
+                vision_action = await self.vision_sentry.analyze_and_ground(screenshot, self.goal)
 
                 if vision_action:
                     w = visual_triggers.get("viewport", {}).get("width", 1280)
@@ -142,7 +142,7 @@ class HyperAgent:
                         elapsed_ms=step_elapsed,
                         total_elapsed_ms=total_elapsed,
                         confidence=0.92,
-                        notes=f"Tier 2 Vision: {vision_action.explanation}"
+                        notes=f"Tier 2 Vision: {vision_action.explanation}",
                     )
                     self.state.steps.append(step)
                     yield step
@@ -164,7 +164,7 @@ class HyperAgent:
                     elapsed_ms=step_elapsed,
                     total_elapsed_ms=total_elapsed,
                     confidence=1.0,
-                    notes="Verified Goal Reached"
+                    notes="Verified Goal Reached",
                 )
                 self.state.steps.append(step)
                 yield step
@@ -194,7 +194,7 @@ class HyperAgent:
                 elapsed_ms=step_elapsed,
                 total_elapsed_ms=total_elapsed,
                 confidence=decision.confidence,
-                notes="Local System 1 Speculative Decision"
+                notes="Local System 1 Speculative Decision",
             )
             self.state.steps.append(step)
             yield step
