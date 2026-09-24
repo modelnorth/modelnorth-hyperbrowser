@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "modelnorth-hyperbrowser"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ultrafast, local-first sovereign web agent engine combining sub-20ms decision models and multimodal vision sentries."
 readme = "README.md"
 license = "Apache-2.0"

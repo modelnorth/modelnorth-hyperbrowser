@@ -6,7 +6,7 @@
 *Sub-20ms reflex execution, $0.00 local base cost, and multimodal vision sentry fallbacks for Canvas and CAPTCHAs.*
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Speed](https://img.shields.io/badge/Decision_Latency-7ms-emerald.svg)]()
 [![Privacy](https://img.shields.io/badge/Data_Privacy-100%25_Local_Reflex-purple.svg)]()
 
