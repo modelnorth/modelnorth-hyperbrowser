@@ -21,6 +21,7 @@ from rich.table import Table
 
 from modelnorth.core.browser import BrowserSession
 from modelnorth.engine.decision_local import LocalDecisionEngine
+from modelnorth.engine.extractor import StructuredExtractor
 from modelnorth.engine.text_engine import TextGenerationEngine
 from modelnorth.engine.vision_sentry import VisionSentry
 
@@ -49,6 +50,30 @@ async def test_tier0_fastpath(browser: BrowserSession) -> bool:
     if not res_type or not res_type.get("matched"):
         raise AssertionError(f"Type match failed: {res_type}")
 
+    return True
+
+
+async def test_shadow_dom_crawling(browser: BrowserSession) -> bool:
+    """Test recursive Shadow DOM crawling and node tagging."""
+    shadow_html = """
+    <html>
+        <body>
+            <div id="host"></div>
+            <script>
+                const host = document.getElementById('host');
+                const root = host.attachShadow({ mode: 'open' });
+                root.innerHTML = '<input placeholder="Shadow Secret Code" /><button>Unlock</button>';
+            </script>
+        </body>
+    </html>
+    """
+    await browser.page.set_content(shadow_html)
+    snapshot = await browser.capture_snapshot()
+    elements = snapshot.get("elements", [])
+    has_shadow_input = any("Shadow Secret Code" in (el.get("name") or "") for el in elements)
+    has_shadow_button = any("Unlock" in (el.get("name") or "") for el in elements)
+    if not (has_shadow_input and has_shadow_button):
+        raise AssertionError(f"Shadow DOM elements missing: {elements}")
     return True
 
 
@@ -84,11 +109,24 @@ async def test_tier2_vision_circuit_breaker() -> bool:
     return True
 
 
+async def test_structured_extractor() -> bool:
+    """Test structured data extraction from DOM cards."""
+    extractor = StructuredExtractor()
+    mock_cards = [
+        {"id": 1, "name": "Flight from DXB to LHE AED 1,040 operated by Air India Express Nonstop 02:15 – 06:30"}
+    ]
+    records = extractor.extract_records(mock_cards)
+    assert len(records) == 1
+    assert records[0]["airline"] == "Air India Express"
+    assert "1,040" in records[0]["price"]
+    return True
+
+
 async def run_preflight():
     console.print(Panel.fit("[bold cyan]⚡ ModelNorth HyperBrowser · Preflight Verification Suite[/bold cyan]"))
 
     table = Table(title="Preflight Test Matrix", show_header=True, header_style="bold magenta")
-    table.add_column("Test Component", width=30)
+    table.add_column("Test Component", width=32)
     table.add_column("Target Tier", justify="center", width=12)
     table.add_column("Status", justify="center", width=14)
     table.add_column("Latency / Metric", justify="right", width=18)
@@ -125,7 +163,21 @@ async def run_preflight():
     except Exception as e:
         table.add_row("Text Heuristic Engine", "[bold green]Tier 1[/bold green]", "[bold red]FAILED[/bold red]", str(e))
 
-    # 3. Vision Sentry Fallback Check
+    # 3. Structured Extractor Check
+    try:
+        t0 = time.perf_counter()
+        await test_structured_extractor()
+        ms = (time.perf_counter() - t0) * 1000
+        table.add_row(
+            "Structured DOM Extractor",
+            "[bold green]Engine[/bold green]",
+            "[bold green]PASSED[/bold green]",
+            f"{ms:.2f} ms",
+        )
+    except Exception as e:
+        table.add_row("Structured DOM Extractor", "[bold green]Engine[/bold green]", "[bold red]FAILED[/bold red]", str(e))
+
+    # 4. Vision Sentry Fallback Check
     try:
         t0 = time.perf_counter()
         await test_tier2_vision_circuit_breaker()
@@ -141,19 +193,27 @@ async def run_preflight():
             "Vision Sentry Circuit Breaker", "[bold yellow]Tier 2[/bold yellow]", "[bold red]FAILED[/bold red]", str(e)
         )
 
-    # 4. Live Browser & Tier 0 In-V8 FastPath Check
+    # 5. Live Browser & Tier 0 In-V8 FastPath + Shadow DOM Check
     browser = BrowserSession(headless=True)
     try:
         await browser.start("about:blank")
+
         t0 = time.perf_counter()
         await test_tier0_fastpath(browser)
         ms = (time.perf_counter() - t0) * 1000
         table.add_row(
             "In-Browser V8 FastPath", "[bold cyan]Tier 0[/bold cyan]", "[bold green]PASSED[/bold green]", f"{ms:.2f} ms"
         )
+
+        t0 = time.perf_counter()
+        await test_shadow_dom_crawling(browser)
+        ms = (time.perf_counter() - t0) * 1000
+        table.add_row(
+            "Recursive Shadow DOM Crawl", "[bold cyan]Tier 0[/bold cyan]", "[bold green]PASSED[/bold green]", f"{ms:.2f} ms"
+        )
     except Exception as e:
         table.add_row(
-            "In-Browser V8 FastPath",
+            "In-Browser V8 Execution",
             "[bold cyan]Tier 0[/bold cyan]",
             "[bold red]FAILED[/bold red]",
             f"{type(e).__name__}: {str(e)[:40]}",

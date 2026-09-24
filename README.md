@@ -18,6 +18,9 @@
 
 - **⚡ Sub-20ms Reflex Loop**: Eliminates the 5–15 second multimodal LLM latency bottleneck for standard web navigation.
 - **💰 $0.00 Base Cost**: Runs Tier 0 (in-V8 intent compiler) and Tier 1 (HyperLocal ONNX INT8) 100% locally on your machine with zero cloud API keys.
+- **🧬 Recursive Shadow DOM & iframe Crawling**: Seamlessly pierces web components, closed/open shadow roots, and embedded frames.
+- **🕵️ Anti-Bot Stealth Layer**: Integrated CDP evasion masking `navigator.webdriver`, injecting realistic Bezier curve mouse movements, and spoofing WebGL signatures.
+- **📊 Zero-Token Structured Extraction**: Instantly extracts DOM tables and cards into validated Pydantic schemas in $< 30\text{ ms}$.
 - **👁️ Multimodal Vision Sentry**: Seamlessly falls back to Gemini 2.5 Flash for `<canvas>`, WebGL, interactive charts, and visual CAPTCHAs with exact pixel coordinate grounding.
 - **🛡️ 100% Sovereign & Private**: No DOM structures, form values, customer credentials, or session cookies are sent to third-party decision APIs.
 
@@ -31,18 +34,19 @@
                            ▼
    ┌───────────────────────────────────────────────┐
    │         Browser Session Harness (CDP)         │
+   │  • Anti-bot stealth & Bezier mouse dynamics   │
    └───────────────────────┬───────────────────────┘
                            │ Page State & Geometry
                            ▼
    ┌───────────────────────────────────────────────┐
    │ TIER 0: In-Browser Heuristic Compiler (V8)    │ ➔ Latency: < 1 ms  |  Cost: $0.00
-   │ Direct intent/selector matching in memory     │
+   │ Direct intent matching & Shadow DOM crawl     │
    └───────────────────────┬───────────────────────┘
                            │ If Ambiguous
                            ▼
    ┌───────────────────────────────────────────────┐
-   │ TIER 1: Local System 1 Decision (HyperLocal ONNX)│ ➔ Latency: 7–15 ms |  Cost: $0.00
-   │ Speculative action table classification       │
+   │ TIER 1: Local System 1 Decision (HyperLocal)  │ ➔ Latency: 7–15 ms |  Cost: $0.00
+   │ Speculative action classification & ranking   │
    └───────────────────────┬───────────────────────┘
                            │ If Canvas / CAPTCHA / Stuck
                            ▼
@@ -63,21 +67,21 @@ cd modelnorth-hyperbrowser
 uv sync
 ```
 
-### 2. Configure Environment
+### 2. Run Preflight Health Suite
 ```bash
-cp .env.example .env
-# Optional: add GEMINI_API_KEY for Tier 2 Canvas/CAPTCHA solving
+uv run python scripts/preflight_check.py
 ```
 
-### 3. Run the Google Flights Benchmark
+### 3. Run the Karpathy AutoResearch Loop
 ```bash
-uv run python examples/flights_demo.py
+uv run python scripts/autoresearch_runner.py --iterations 3
 ```
 
 ---
 
 ## 💻 Python Library Usage
 
+### Fast Action Execution
 ```python
 from modelnorth import HyperAgent
 
@@ -86,9 +90,27 @@ goal = (
     "for one adult in economy. Stop when flight list is visible."
 )
 
-with HyperAgent(url="https://www.google.com/travel/flights?hl=en", goal=goal) as agent:
-    for step in agent.run():
-        print(f"[Tier {step.tier}] {step.action} -> {step.target_name} ({step.elapsed_ms}ms)")
+async with HyperAgent(url="https://www.google.com/travel/flights?hl=en", goal=goal) as agent:
+    async for step in agent.run():
+        print(f"[Tier {step.tier}] {step.action} -> {step.target_name} ({step.elapsed_ms:.1f}ms)")
+```
+
+### Zero-Token Structured Data Extraction
+```python
+from pydantic import BaseModel
+from typing import Optional
+from modelnorth import HyperAgent
+
+class FlightCard(BaseModel):
+    airline: Optional[str] = None
+    price: Optional[str] = None
+    stops: Optional[str] = None
+
+async with HyperAgent(url="https://www.google.com/travel/flights?hl=en", goal="Show flights") as agent:
+    # Extract records directly without LLM token cost (< 30ms)
+    flights = await agent.extract(schema=FlightCard)
+    for flight in flights:
+        print(flight)
 ```
 
 ---

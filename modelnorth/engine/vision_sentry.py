@@ -16,7 +16,9 @@ class VisionAction:
     action: str  # CLICK, DRAG, SOLVE_CAPTCHA
     point_x_ratio: float  # 0.0 to 1.0
     point_y_ratio: float  # 0.0 to 1.0
-    explanation: str
+    end_x_ratio: Optional[float] = None
+    end_y_ratio: Optional[float] = None
+    explanation: str = ""
     elapsed_ms: float = 0.0
 
 
@@ -59,9 +61,10 @@ class VisionSentry:
                 f"2. CAPTCHA verification buttons (e.g., 'Verify you are human', Turnstile, hCaptcha checkbox).\n\n"
                 f"Return JSON with the exact target coordinates on a 0-1000 scale:\n"
                 f"{{\n"
-                f'  "action": "CLICK",\n'
+                f'  "action": "CLICK" or "DRAG",\n'
                 f'  "point": [y_coord_0_to_1000, x_coord_0_to_1000],\n'
-                f'  "explanation": "why clicking this location achieves the sub-goal"\n'
+                f'  "end_point": [y_coord_0_to_1000, x_coord_0_to_1000],\n'
+                f'  "explanation": "why clicking/dragging this location achieves the goal"\n'
                 f"}}"
             )
 
@@ -79,12 +82,18 @@ class VisionSentry:
             y_ratio = point[0] / 1000.0
             x_ratio = point[1] / 1000.0
 
+            end_point = data.get("end_point")
+            end_x = (end_point[1] / 1000.0) if end_point else None
+            end_y = (end_point[0] / 1000.0) if end_point else None
+
             elapsed = (time.perf_counter() - start_t) * 1000
 
             return VisionAction(
                 action=data.get("action", "CLICK"),
                 point_x_ratio=x_ratio,
                 point_y_ratio=y_ratio,
+                end_x_ratio=end_x,
+                end_y_ratio=end_y,
                 explanation=data.get("explanation", "Grounded by Gemini Vision"),
                 elapsed_ms=elapsed,
             )
