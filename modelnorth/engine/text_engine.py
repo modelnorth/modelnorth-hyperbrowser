@@ -27,12 +27,12 @@ class TextGenerationEngine:
 
         # 1. Fast-Path Heuristic Extraction (< 1 ms)
         if "from" in field_lower or "origin" in field_lower or "where from" in field_lower:
-            m = re.search(r"from\s+([A-Za-z\s]+?)(?:\s+to|\s+on|\s+for|\.|$)", goal, re.IGNORECASE)
+            m = re.search(r"from\s+([A-Za-z0-9\(\)\s]+?)(?:\s+to|\s+on|\s+for|\.|$)", goal, re.IGNORECASE)
             if m:
                 return m.group(1).strip()
 
-        if "to" in field_lower or "destination" in field_lower or "where to" in field_lower:
-            m = re.search(r"to\s+([A-Za-z\s]+?)(?:\s+on|\s+for|\s+from|\.|$)", goal, re.IGNORECASE)
+        if "to" in field_lower or "destination" in field_lower or "where to" in field_lower or "where else" in field_lower:
+            m = re.search(r"to\s+([A-Za-z0-9\(\)\s]+?)(?:\s+on|\s+for|\s+from|\.|$)", goal, re.IGNORECASE)
             if m:
                 return m.group(1).strip()
 

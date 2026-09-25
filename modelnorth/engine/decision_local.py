@@ -82,10 +82,9 @@ class LocalDecisionEngine:
             val = (el.get("value") or "").lower()
             sig = f"{role}:{name}"
 
-            # Heavy penalty if this element was already clicked
-            past_clicks = history.count(sig)
-            if past_clicks > 0:
-                continue  # Skip already clicked items to avoid oscillating loops
+            # Skip if already interacted with (by signature or name)
+            if any(sig.lower() in h.lower() or (name and name in h.lower()) for h in history):
+                continue
 
             score = 0.0
 
@@ -97,20 +96,22 @@ class LocalDecisionEngine:
                 if token in val:
                     score += 1.0
 
-            # Prioritize origin and destination fields if not filled
-            if "where from" in name or "origin" in name:
-                if not val or "dubai" not in val.lower():
-                    score += 5.0
-            if "where to" in name or "destination" in name:
-                if not val or "lahore" not in val.lower():
-                    score += 5.0
-            if "search" in name and role == "button":
-                # If fields are filled or search is available
-                score += 4.0
+            # Ignore swap button and suggestion cards
+            if "swap" in name:
+                continue
 
-            # Ignore random destination suggestion cards
-            if "find flights from" in name and "operated by" in name:
-                score -= 3.0
+            if "operated by" in name or ("find flights from" in name and ("from aed" in name or "from usd" in name or "from $" in name)):
+                continue
+
+            # Prioritize origin and destination inputs
+            if "where from" in name or ("origin" in name and role in ["textbox", "combobox", "button"]):
+                if not val or "dubai" not in val.lower():
+                    score += 8.0
+            if "where to" in name or "where else" in name or ("destination" in name and role in ["textbox", "combobox", "button"]):
+                if not val or "lahore" not in val.lower():
+                    score += 8.0
+            if "search" in name and (role == "button" or "button" in role):
+                score += 6.0
 
             scored_candidates.append((score, el, sig))
 

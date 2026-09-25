@@ -81,7 +81,7 @@ HTML_DASHBOARD = """
                 <div class="flex items-center justify-between p-3 bg-gray-950 rounded border border-gray-800">
                     <div class="flex items-center gap-3">
                         <span class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-900 text-emerald-300">T1</span>
-                        <span class="text-sm text-gray-200">TYPE_TEXT [data-mn-id="3"] "Where from?" -> "Zurich"</span>
+                        <span class="text-sm text-gray-200">TYPE_TEXT [data-mn-id="3"] "Where from?" -> "Dubai (DXB)"</span>
                     </div>
                     <div class="flex items-center gap-4 text-xs">
                         <span class="text-gray-400">HyperLocal ONNX INT8</span>
@@ -92,7 +92,7 @@ HTML_DASHBOARD = """
                 <div class="flex items-center justify-between p-3 bg-gray-950 rounded border border-gray-800">
                     <div class="flex items-center gap-3">
                         <span class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-900 text-emerald-300">T1</span>
-                        <span class="text-sm text-gray-200">TYPE_TEXT [data-mn-id="4"] "Where to?" -> "London"</span>
+                        <span class="text-sm text-gray-200">TYPE_TEXT [data-mn-id="4"] "Where to?" -> "Lahore (LHE)"</span>
                     </div>
                     <div class="flex items-center gap-4 text-xs">
                         <span class="text-gray-400">HyperLocal ONNX INT8</span>

@@ -56,6 +56,7 @@ class HyperAgent:
         headless: bool = False,
         gemini_api_key: Optional[str] = None,
         enable_stealth: bool = True,
+        record_video_dir: Optional[str] = None,
     ) -> None:
         self.url = url
         self.goal = goal
@@ -63,8 +64,14 @@ class HyperAgent:
         self.cdp_url = cdp_url
         self.headless = headless
         self.enable_stealth = enable_stealth
+        self.record_video_dir = record_video_dir
 
-        self.browser = BrowserSession(cdp_url=cdp_url, headless=headless, enable_stealth=enable_stealth)
+        self.browser = BrowserSession(
+            cdp_url=cdp_url,
+            headless=headless,
+            enable_stealth=enable_stealth,
+            record_video_dir=record_video_dir,
+        )
         self.decision_engine = LocalDecisionEngine()
         self.text_engine = TextGenerationEngine()
         self.vision_sentry = VisionSentry(api_key=gemini_api_key)
@@ -185,7 +192,9 @@ class HyperAgent:
                     continue
 
             # 4. Standard Tier 1 Local System 1 Decision (< 15 ms)
-            history_sigs = [f"{s.action}:{s.target_name}" for s in self.state.steps]
+            history_sigs = [
+                f"{s.action}:{s.target_name}".lower() for s in self.state.steps if s.target_name
+            ] + [s.target_name.lower() for s in self.state.steps if s.target_name]
             decision = self.decision_engine.predict(self.goal, elements, history=history_sigs)
 
             if decision.operation == "DONE":

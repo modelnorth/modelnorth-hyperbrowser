@@ -21,12 +21,14 @@ class BrowserSession:
         viewport_width: int = 1280,
         viewport_height: int = 800,
         enable_stealth: bool = True,
+        record_video_dir: Optional[str] = None,
     ) -> None:
         self.cdp_url = cdp_url
         self.headless = headless
         self.viewport_width = viewport_width
         self.viewport_height = viewport_height
         self.enable_stealth = enable_stealth
+        self.record_video_dir = record_video_dir
 
         self._playwright = None
         self._browser: Optional[Browser] = None
@@ -75,12 +77,19 @@ class BrowserSession:
                         args=launch_args,
                         channel="chrome",
                     )
-            self._context = await self._browser.new_context(
-                viewport={"width": self.viewport_width, "height": self.viewport_height},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                locale="en-US",
-                timezone_id="America/New_York",
-            )
+            
+            context_kwargs = {
+                "viewport": {"width": self.viewport_width, "height": self.viewport_height},
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "locale": "en-US",
+                "timezone_id": "America/New_York",
+            }
+            if self.record_video_dir:
+                Path(self.record_video_dir).mkdir(parents=True, exist_ok=True)
+                context_kwargs["record_video_dir"] = self.record_video_dir
+                context_kwargs["record_video_size"] = {"width": self.viewport_width, "height": self.viewport_height}
+
+            self._context = await self._browser.new_context(**context_kwargs)
 
             if self.enable_stealth:
                 await self._context.add_init_script(self._stealth_js)

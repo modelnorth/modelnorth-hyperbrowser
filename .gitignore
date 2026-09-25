@@ -51,3 +51,6 @@ htmlcov/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Media temp
+docs/videos/

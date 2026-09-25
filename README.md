@@ -10,6 +10,14 @@
 [![Speed](https://img.shields.io/badge/Decision_Latency-7ms-emerald.svg)]()
 [![Privacy](https://img.shields.io/badge/Data_Privacy-100%25_Local_Reflex-purple.svg)]()
 
+<br/>
+
+<p align="center">
+  <img src="docs/demo.gif" alt="ModelNorth HyperBrowser Benchmark Demo" width="850" style="border-radius: 8px; border: 1px solid #333;"/>
+</p>
+
+*Live execution of the sovereign **Dubai (DXB) &rarr; Lahore (LHE)** benchmark running on Tier 1 Local Reflex with zero cloud LLM latency.*
+
 </div>
 
 ---
