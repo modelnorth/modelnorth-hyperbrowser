@@ -28,6 +28,10 @@
 - **💰 $0.00 Base Cost**: Runs Tier 0 (in-V8 intent compiler) and Tier 1 (HyperLocal ONNX INT8) 100% locally on your machine with zero cloud API keys.
 - **🧬 Recursive Shadow DOM & iframe Crawling**: Seamlessly pierces web components, closed/open shadow roots, and embedded frames.
 - **🕵️ Anti-Bot Stealth Layer**: Integrated CDP evasion masking `navigator.webdriver`, injecting realistic Bezier curve mouse movements, and spoofing WebGL signatures.
+- **🔒 Session Persistence & Profile Vault**: Save and load authenticated cookies and localStorage states across runs to skip repetitive logins and 2FA.
+- **⚡ DOM Mutation Verification Circuit Breaker**: Continuous `MutationObserver` tracks page reactions—if actions produce 0 state changes, the engine auto-escalates to Tier 2 Vision.
+- **📥 Native Download & File Manager**: Intercepts, tracks, and verifies downloaded CSVs, PDFs, and invoices directly.
+- **🔌 Sovereign Model Context Protocol (MCP) Server**: Zero-latency browser execution backend ready for Claude Code, Cursor, and autonomous agents.
 - **📊 Zero-Token Structured Extraction**: Instantly extracts DOM tables and cards into validated Pydantic schemas in $< 30\text{ ms}$.
 - **👁️ Multimodal Vision Sentry**: Seamlessly falls back to Gemini 2.5 Flash for `<canvas>`, WebGL, interactive charts, and visual CAPTCHAs with exact pixel coordinate grounding.
 - **🛡️ 100% Sovereign & Private**: No DOM structures, form values, customer credentials, or session cookies are sent to third-party decision APIs.
@@ -114,12 +118,49 @@ class FlightCard(BaseModel):
     price: Optional[str] = None
     stops: Optional[str] = None
 
-async with HyperAgent(url="https://www.google.com/travel/flights?hl=en", goal="Show flights") as agent:
-    # Extract records directly without LLM token cost (< 30ms)
-    flights = await agent.extract(schema=FlightCard)
-    for flight in flights:
-        print(flight)
+### Authenticated Session Persistence & Downloads
+```python
+from modelnorth import HyperAgent
+
+# 1. Run with authenticated profile vault
+async with HyperAgent(
+    url="https://app.example.com",
+    goal="Export monthly invoice report",
+    storage_state_path="vault/session.json",
+    download_dir="downloads",
+) as agent:
+    async for step in agent.run():
+        print(f"[{step.action}] {step.target_name}")
+
+    # Wait for downloaded invoice file
+    download = await agent.wait_for_download()
+    print(f"Downloaded: {download['filename']} ({download['size_bytes']} bytes)")
+
+    # Save session state for future runs
+    await agent.save_session("vault/session.json")
 ```
+
+---
+
+## 🔌 Model Context Protocol (MCP) Integration
+
+ModelNorth HyperBrowser includes a native MCP stdio server. Integrate it into Claude Code, Cursor, or any MCP client by adding to your configuration:
+
+```json
+{
+  "mcpServers": {
+    "hyperbrowser": {
+      "command": "hyperbrowser-mcp"
+    }
+  }
+}
+```
+
+Exposed MCP Tools:
+- `hyperbrowser_run`: Full Tri-Tier autonomous reflex execution with step telemetry.
+- `hyperbrowser_extract`: Direct zero-token DOM card and table extraction in $< 30$ms.
+- `hyperbrowser_snapshot`: Fast recursive Shadow DOM inspection and visual trigger audit.
+- `hyperbrowser_save_session`: Captures cookies and local storage tokens for instant authenticated reuse.
 
 ---
 

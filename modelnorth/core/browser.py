@@ -22,6 +22,8 @@ class BrowserSession:
         viewport_height: int = 800,
         enable_stealth: bool = True,
         record_video_dir: Optional[str] = None,
+        storage_state_path: Optional[str] = None,
+        download_dir: Optional[str] = None,
     ) -> None:
         self.cdp_url = cdp_url
         self.headless = headless
@@ -29,12 +31,15 @@ class BrowserSession:
         self.viewport_height = viewport_height
         self.enable_stealth = enable_stealth
         self.record_video_dir = record_video_dir
+        self.storage_state_path = storage_state_path
+        self.download_dir = download_dir
 
         self._playwright = None
         self._browser: Optional[Browser] = None
         self._context: Optional[BrowserContext] = None
         self._page: Optional[Page] = None
         self._pages: List[Page] = []
+        self._downloads: List[Dict[str, Any]] = []
 
         # Load In-V8 Scripts
         core_dir = Path(__file__).parent
@@ -83,7 +88,11 @@ class BrowserSession:
                 "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                 "locale": "en-US",
                 "timezone_id": "America/New_York",
+                "accept_downloads": True,
             }
+            if self.storage_state_path and Path(self.storage_state_path).is_file():
+                context_kwargs["storage_state"] = self.storage_state_path
+
             if self.record_video_dir:
                 Path(self.record_video_dir).mkdir(parents=True, exist_ok=True)
                 context_kwargs["record_video_dir"] = self.record_video_dir
@@ -95,6 +104,22 @@ class BrowserSession:
                 await self._context.add_init_script(self._stealth_js)
 
             self._page = await self._context.new_page()
+
+            # Wire up download handler
+            async def _on_download(download):
+                target_dir = Path(self.download_dir or "downloads")
+                target_dir.mkdir(parents=True, exist_ok=True)
+                filename = download.suggested_filename
+                save_path = target_dir / filename
+                await download.save_as(str(save_path))
+                self._downloads.append({
+                    "filename": filename,
+                    "path": str(save_path),
+                    "url": download.url,
+                    "size_bytes": save_path.stat().st_size if save_path.exists() else 0,
+                })
+
+            self._page.on("download", _on_download)
 
         self._pages = self._context.pages if self._context else [self._page]
 
@@ -320,6 +345,40 @@ class BrowserSession:
             await self._page.bring_to_front()
             return self._page
         raise IndexError(f"Tab index {index} out of range ({len(self._pages)} tabs)")
+
+    # Session Persistence & Downloads
+    async def save_storage_state(self, path: Optional[str] = None) -> str:
+        """Saves current browser cookies and localStorage state to a JSON file."""
+        if not self._context:
+            raise RuntimeError("Browser context not initialized.")
+        target_path = Path(path or self.storage_state_path or "storage_state.json")
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        await self._context.storage_state(path=str(target_path))
+        return str(target_path)
+
+    async def wait_for_download(self, timeout: float = 15.0) -> Optional[Dict[str, Any]]:
+        """Waits for and returns the latest downloaded file metadata."""
+        start_t = asyncio.get_event_loop().time()
+        initial_count = len(self._downloads)
+        while asyncio.get_event_loop().time() - start_t < timeout:
+            if len(self._downloads) > initial_count:
+                return self._downloads[-1]
+            await asyncio.sleep(0.1)
+        return self._downloads[-1] if self._downloads else None
+
+    async def get_mutation_count(self) -> int:
+        """Returns the total DOM mutation count tracked since page load."""
+        try:
+            return await self.page.evaluate("() => window.__mn_mutation_count || 0")
+        except Exception:
+            return 0
+
+    async def reset_mutation_count(self) -> None:
+        """Resets the DOM mutation counter."""
+        try:
+            await self.page.evaluate("() => { window.__mn_mutation_count = 0; }")
+        except Exception:
+            pass
 
     async def close(self) -> None:
         """Gracefully closes page, context, and browser instance."""

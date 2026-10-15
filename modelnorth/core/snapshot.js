@@ -33,6 +33,23 @@
         '#challenge-stage'
     ].join(',');
 
+    // Continuous DOM Mutation Tracking
+    if (typeof window.__mn_mutation_count === 'undefined') {
+        window.__mn_mutation_count = 0;
+        try {
+            const observer = new MutationObserver((mutations) => {
+                window.__mn_mutation_count += mutations.length;
+            });
+            observer.observe(document.documentElement || document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                characterData: true
+            });
+            window.__mn_mutation_observer = observer;
+        } catch (_) {}
+    }
+
     const viewportW = window.innerWidth || document.documentElement.clientWidth;
     const viewportH = window.innerHeight || document.documentElement.clientHeight;
 
@@ -205,14 +222,27 @@
     const title = document.title || '';
     const url = window.location.href || '';
 
+    let hasOverlay = false;
+    try {
+        const dialogs = document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"], .modal.show, #cookie-banner, [id*="cookie" i], [class*="cookie-banner" i], [class*="consent" i]');
+        for (const d of dialogs) {
+            if (isVisible(d)) {
+                hasOverlay = true;
+                break;
+            }
+        }
+    } catch (_) {}
+
     return {
         url: url,
         title: title,
         elements: elements,
+        mutationCount: window.__mn_mutation_count || 0,
         visualTriggers: {
             hasCanvas: canvasCount > 0,
             canvasCount: canvasCount,
             hasCaptcha: hasCaptcha,
+            hasOverlay: hasOverlay,
             viewport: { width: viewportW, height: viewportH }
         }
     };

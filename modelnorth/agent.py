@@ -57,6 +57,8 @@ class HyperAgent:
         gemini_api_key: Optional[str] = None,
         enable_stealth: bool = True,
         record_video_dir: Optional[str] = None,
+        storage_state_path: Optional[str] = None,
+        download_dir: Optional[str] = None,
     ) -> None:
         self.url = url
         self.goal = goal
@@ -65,12 +67,16 @@ class HyperAgent:
         self.headless = headless
         self.enable_stealth = enable_stealth
         self.record_video_dir = record_video_dir
+        self.storage_state_path = storage_state_path
+        self.download_dir = download_dir
 
         self.browser = BrowserSession(
             cdp_url=cdp_url,
             headless=headless,
             enable_stealth=enable_stealth,
             record_video_dir=record_video_dir,
+            storage_state_path=storage_state_path,
+            download_dir=download_dir,
         )
         self.decision_engine = LocalDecisionEngine()
         self.text_engine = TextGenerationEngine()
@@ -85,6 +91,14 @@ class HyperAgent:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.browser.close()
+
+    async def save_session(self, path: Optional[str] = None) -> str:
+        """Saves current browser session (cookies, storage tokens) for instant reuse."""
+        return await self.browser.save_storage_state(path)
+
+    async def wait_for_download(self, timeout: float = 15.0) -> Optional[Dict[str, Any]]:
+        """Waits for and returns downloaded file details (filename, path, size)."""
+        return await self.browser.wait_for_download(timeout)
 
     async def extract(
         self,
@@ -105,19 +119,28 @@ class HyperAgent:
         return await self.browser.switch_tab(index)
 
     async def run(self) -> AsyncGenerator[AgentStep, None]:
-        """Main execution loop streaming steps as they execute."""
+        """Main execution loop streaming steps as they execute with mutation verification circuit breaker."""
         step_idx = 1
+        stagnant_steps = 0
+        last_url = ""
 
         while step_idx <= self.max_steps:
             t0 = time.perf_counter()
 
-            # 1. Capture atomic DOM snapshot (including recursive Shadow DOM)
+            # 1. Capture atomic DOM snapshot (including recursive Shadow DOM and mutation count)
             snapshot = await self.browser.capture_snapshot()
             elements = snapshot.get("elements", [])
             visual_triggers = snapshot.get("visualTriggers", {})
+            current_url = snapshot.get("url", "")
+            pre_mutation_count = snapshot.get("mutationCount", 0)
+
+            # Circuit breaker: if 2 consecutive actions caused 0 mutations and no URL change, force Vision Sentry
+            force_vision = stagnant_steps >= 2
 
             # 2. Check Tier 0 Fast-Path Compiler (< 1 ms)
-            fastpath_res = await self.browser.run_fastpath(self.goal)
+            fastpath_res = None
+            if not force_vision:
+                fastpath_res = await self.browser.run_fastpath(self.goal)
 
             if fastpath_res and fastpath_res.get("matched"):
                 action = fastpath_res["action"]
@@ -134,6 +157,13 @@ class HyperAgent:
                     await self.browser.select_option(target_id, value)
                 elif action == "KEY_PRESS":
                     await self.browser.press_key(fastpath_res.get("key", "Enter"))
+
+                post_mutations = await self.browser.get_mutation_count()
+                if post_mutations == pre_mutation_count and current_url == last_url:
+                    stagnant_steps += 1
+                else:
+                    stagnant_steps = 0
+                last_url = current_url
 
                 step_elapsed = (time.perf_counter() - t0) * 1000
                 total_elapsed = (time.perf_counter() - self.state.start_time) * 1000
@@ -155,8 +185,8 @@ class HyperAgent:
                 step_idx += 1
                 continue
 
-            # 3. Check Tier 2 Vision Sentry Trigger (Canvas / CAPTCHA / Empty DOM)
-            if visual_triggers.get("hasCanvas") or visual_triggers.get("hasCaptcha") or len(elements) == 0:
+            # 3. Check Tier 2 Vision Sentry Trigger (Canvas / CAPTCHA / Empty DOM / Circuit Breaker)
+            if force_vision or visual_triggers.get("hasCanvas") or visual_triggers.get("hasCaptcha") or len(elements) == 0:
                 screenshot = await self.browser.capture_screenshot()
                 vision_action = await self.vision_sentry.analyze_and_ground(screenshot, self.goal)
 
@@ -173,9 +203,13 @@ class HyperAgent:
                     else:
                         await self.browser.click_pixel(abs_x, abs_y)
 
+                    stagnant_steps = 0
+                    last_url = current_url
+
                     step_elapsed = (time.perf_counter() - t0) * 1000
                     total_elapsed = (time.perf_counter() - self.state.start_time) * 1000
 
+                    trigger_reason = "Circuit Breaker Fallback" if force_vision else vision_action.explanation
                     step = AgentStep(
                         step_number=step_idx,
                         tier=2,
@@ -184,7 +218,7 @@ class HyperAgent:
                         elapsed_ms=step_elapsed,
                         total_elapsed_ms=total_elapsed,
                         confidence=0.92,
-                        notes=f"Tier 2 Vision: {vision_action.explanation}",
+                        notes=f"Tier 2 Vision: {trigger_reason}",
                     )
                     self.state.steps.append(step)
                     yield step
@@ -223,6 +257,13 @@ class HyperAgent:
                 val = await self.text_engine.generate_text(field_name, self.goal)
                 await self.browser.type_text(decision.target_id, val)
                 decision.text_to_type = val
+
+            post_mutations = await self.browser.get_mutation_count()
+            if post_mutations == pre_mutation_count and current_url == last_url:
+                stagnant_steps += 1
+            else:
+                stagnant_steps = 0
+            last_url = current_url
 
             step_elapsed = (time.perf_counter() - t0) * 1000
             total_elapsed = (time.perf_counter() - self.state.start_time) * 1000

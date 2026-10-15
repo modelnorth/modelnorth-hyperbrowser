@@ -103,6 +103,11 @@ class LocalDecisionEngine:
             if "operated by" in name or ("find flights from" in name and ("from aed" in name or "from usd" in name or "from $" in name)):
                 continue
 
+            # Prioritize modal and cookie consent dismissal buttons to unblock page
+            is_dismiss = any(w in name for w in ["accept all", "accept cookies", "i agree", "got it", "dismiss", "allow all", "close dialog"])
+            if is_dismiss and role in ["button", "link", "clickable"]:
+                score += 15.0
+
             # Prioritize origin and destination inputs
             if "where from" in name or ("origin" in name and role in ["textbox", "combobox", "button"]):
                 if not val or "dubai" not in val.lower():

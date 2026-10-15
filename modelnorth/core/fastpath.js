@@ -69,6 +69,29 @@
 
     const allNodes = getAllTaggedNodes(document);
 
+    // Pattern 0: Modal & Cookie Consent Overlay Auto-Dismissal e.g. 'dismiss modal', 'accept cookies', 'close popup'
+    const overlayMatch = cleanGoal.match(/(?:dismiss|close|accept|agree|got it|reject all|allow all)\s*(?:dialog|modal|popup|cookies?|banner|notice)?/i);
+    if (overlayMatch && (cleanGoal.includes('cookie') || cleanGoal.includes('modal') || cleanGoal.includes('popup') || cleanGoal.includes('dismiss'))) {
+        const dismissKeywords = ['accept all', 'accept cookies', 'i agree', 'agree', 'got it', 'close', 'dismiss', 'ok', 'allow all', 'continue without accepting'];
+        for (const kw of dismissKeywords) {
+            for (const node of allNodes) {
+                const text = normalizeText(node.innerText || node.textContent || node.getAttribute('aria-label') || node.title || '');
+                if (text === kw || (text.startsWith(kw) && text.length < kw.length + 15)) {
+                    const id = parseInt(node.getAttribute('data-mn-id'), 10);
+                    return {
+                        matched: true,
+                        tier: 0,
+                        action: "CLICK",
+                        targetId: id,
+                        targetName: text,
+                        confidence: 0.98,
+                        notes: "Overlay Auto-Dismiss"
+                    };
+                }
+            }
+        }
+    }
+
     // Pattern 1: Keyboard actions e.g. 'press enter', 'hit escape', 'press tab'
     const keyMatch = cleanGoal.match(/^(?:press|hit|send key)\s+([a-z0-9_]+)$/i);
     if (keyMatch) {
